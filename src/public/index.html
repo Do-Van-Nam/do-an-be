@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wedding Planner Backend Documentation</title>
+    <style>
+        /* CSS styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+            color: #333;
+        }
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .content {
+            margin: 20px;
+        }
+        h1 {
+            font-size: 2rem;
+            color: #333;
+        }
+        h2 {
+            color: #333;
+        }
+        p {
+            font-size: 1rem;
+            color: #555;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>WEDDING PLANNER WEB - Backend Documentation</h1>
+    <p>Website lên kế hoạch cho đám cưới, mua sắm và đặt dịch vụ liên quan.</p>
+</header>
+
+<div class="content">
+    <h2>Mô tả dự án</h2>
+    <p>Dự án Wedding Planner là một nền tảng trực tuyến hỗ trợ người dùng lên kế hoạch tổ chức đám cưới, cung cấp dịch vụ đặt đồ cưới và dịch vụ liên quan.</p>
+    <p><strong>Repo GitHub:</strong> <a href="https://github.com/Do-Van-Nam/wedding-planner" target="_blank">Wedding Planner GitHub</a></p>
+    <p><strong>Demo:</strong></p>
+    <ul>
+        <li>Frontend: <a href="https://wedding-planner-frontend-sigma.vercel.app/" target="_blank">Wedding Planner Frontend</a></li>
+        <li>Backend: <a href="https://wedding-planner-backend.vercel.app/" target="_blank">Wedding Planner Backend</a></li>
+    </ul>
+    <p><strong>Công nghệ sử dụng:</strong> NodeJS, ExpressJS, ReactJS, MongoDB</p>
+
+    <h2>Bảng mô tả các API của dự án<br/>
+    baseUrl: https://wedding-planner-backend.vercel.app/
+    </h2>
+    <table>
+        <tr>
+            <th>STT</th>
+            <th>Đường dẫn API</th>
+            <th>Phương thức</th>
+            <th>Đầu vào</th>
+            <th>Đầu ra</th>
+            <th>Mô tả</th>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>/acc/getAllAcc</td>
+            <td>GET</td>
+            <td>-</td>
+            <td>Danh sách các tài khoản</td>
+            <td>Lấy tất cả các tài khoản</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td>/acc/:accId</td>
+            <td>GET</td>
+            <td>accId</td>
+            <td>Thông tin tài khoản</td>
+            <td>Lấy thông tin tài khoản theo ID</td>
+        </tr>
+        <tr>
+            <td>3</td>
+            <td>/acc</td>
+            <td>POST</td>
+            <td>name, phone, password, role</td>
+            <td>Thông tin tài khoản mới</td>
+            <td>Tạo tài khoản mới</td>
+        </tr>
+        <tr>
+            <td>4</td>
+            <td>/acc/:id</td>
+            <td>PUT</td>
+            <td>id, name, phone, password, role</td>
+            <td>Thông tin tài khoản đã cập nhật</td>
+            <td>Cập nhật thông tin tài khoản theo ID</td>
+        </tr>
+        <tr>
+            <td>5</td>
+            <td>/acc/:id</td>
+            <td>DELETE</td>
+            <td>id</td>
+            <td>Thông báo xóa tài khoản</td>
+            <td>Xóa tài khoản theo ID</td>
+        </tr>
+        <tr>
+            <td>6</td>
+            <td>/acc/check-auth</td>
+            <td>GET</td>
+            <td>Token (xác thực người dùng)</td>
+            <td>Thông tin người dùng</td>
+            <td>Kiểm tra quyền xác thực người dùng</td>
+        </tr>
+        <tr>
+            <td>7</td>
+            <td>/acc/update-field/:accId</td>
+            <td>PUT</td>
+            <td>accId, field, value</td>
+            <td>Thông tin tài khoản đã cập nhật</td>
+            <td>Cập nhật một trường thông tin cụ thể của tài khoản</td>
+        </tr>
+        <tr>
+            <td>8</td>
+            <td>/login</td>
+            <td>POST</td>
+            <td>phone, password</td>
+            <td>Token và thông tin người dùng</td>
+            <td>Đăng nhập tài khoản và trả về token xác thực</td>
+        </tr>
+        <tr>
+            <td>9</td>
+            <td>/acc/signup</td>
+            <td>POST</td>
+            <td>phone, password, role, name</td>
+            <td>Thông tin tài khoản mới, token</td>
+            <td>Đăng ký tài khoản mới và trả về token xác thực</td>
+        </tr>
+        <tr>
+            <td>10</td>
+            <td>/chatroom/:accId</td>
+            <td>GET</td>
+            <td>accId</td>
+            <td>Danh sách người dùng và phòng chat</td>
+            <td>Lấy danh sách các phòng chat của người dùng và thông tin người chơi còn lại trong các phòng chat đó</td>
+        </tr>
+        <tr>
+            <td>11</td>
+            <td>/chatroom/:id</td>
+            <td>GET</td>
+            <td>id</td>
+            <td>Thông tin phòng chat</td>
+            <td>Lấy thông tin chi tiết của phòng chat theo id</td>
+        </tr>
+        <tr>
+            <td>12</td>
+            <td>/chatroom</td>
+            <td>POST</td>
+            <td>user1Id, user2Id</td>
+            <td>Thông tin phòng chat mới</td>
+            <td>Tạo mới phòng chat giữa hai người dùng</td>
+        </tr>
+        <tr>
+            <td>13</td>
+            <td>/chatroom/:id</td>
+            <td>PUT</td>
+            <td>id, user1Id, user2Id</td>
+            <td>Thông tin phòng chat đã cập nhật</td>
+            <td>Cập nhật thông tin phòng chat theo id</td>
+        </tr>
+        <tr>
+            <td>14</td>
+            <td>/chatroom/:id</td>
+            <td>DELETE</td>
+            <td>id</td>
+            <td>Thông báo xóa phòng chat</td>
+            <td>Xóa phòng chat theo id</td>
+        </tr>
+        <tr>
+            <td>15</td>
+            <td>/favourites/:accId</td>
+            <td>GET</td>
+            <td>accId</td>
+            <td>Danh sách các Favourite của tài khoản</td>
+            <td>Lấy danh sách các Favourite theo accountId</td>
+        </tr>
+        <tr>
+            <td>16</td>
+            <td>/favourite/:id</td>
+            <td>GET</td>
+            <td>id</td>
+            <td>Thông tin Favourite</td>
+            <td>Lấy thông tin Favourite theo id</td>
+        </tr>
+        <tr>
+            <td>17</td>
+            <td>/favourites</td>
+            <td>POST</td>
+            <td>accId, vendors</td>
+            <td>Favourite mới</td>
+            <td>Tạo mới Favourite cho tài khoản</td>
+        </tr>
+        <tr>
+            <td>18</td>
+            <td>/favourite/:id</td>
+            <td>PUT</td>
+            <td>id, accId, vendors</td>
+            <td>Favourite đã cập nhật</td>
+            <td>Cập nhật Favourite theo id</td>
+        </tr>
+        <tr>
+            <td>19</td>
+            <td>/favourite/:id</td>
+            <td>DELETE</td>
+            <td>id</td>
+            <td>Thông tin Favourite đã bị xóa</td>
+            <td>Xóa Favourite theo id</td>
+        </tr>
+        <tr>
+            <td>20</td>
+            <td>/favourite/:accId/toggleVendor</td>
+            <td>POST</td>
+            <td>vendorId</td>
+            <td>Favourite với vendor đã thêm hoặc xóa</td>
+            <td>Thêm hoặc xóa một vendor trong Favourite của tài khoản</td>
+        </tr>
+        <tr>
+            <td>21</td>
+            <td>/favourite/:accId/checkVendorInFavourite</td>
+            <td>POST</td>
+            <td>vendorId</td>
+            <td>Thông tin tồn tại hay không</td>
+            <td>Kiểm tra vendor có trong Favourite của tài khoản hay không</td>
+        </tr>
+        <tr>
+            <td>22</td>
+            <td>/guest/:accId</td>
+            <td>GET</td>
+            <td>accId</td>
+            <td>Thông tin khách mời</td>
+            <td>Lấy thông tin Guest theo accId</td>
+        </tr>
+        <tr>
+            <td>23</td>
+            <td>/guest/:id</td>
+            <td>GET</td>
+            <td>id</td>
+            <td>Thông tin khách mời</td>
+            <td>Lấy thông tin Guest theo id</td>
+        </tr>
+        <tr>
+            <td>24</td>
+            <td>/guest/:accId</td>
+            <td>POST</td>
+            <td>guestList</td>
+            <td>Thông tin khách mời mới</td>
+            <td>Tạo mới Guest hoặc thêm khách vào danh sách của Guest</td>
+        </tr>
+        <tr>
+            <td>25</td>
+            <td>/guest/:id</td>
+            <td>PUT</td>
+            <td>accId, guestList</td>
+            <td>Thông tin khách mời đã cập nhật</td>
+            <td>Cập nhật thông tin Guest theo id</td>
+        </tr>
+        <tr>
+            <td>26</td>
+            <td>/guest/:id</td>
+            <td>DELETE</td>
+            <td>id</td>
+            <td>Thông báo xóa khách mời thành công</td>
+            <td>Xóa Guest theo id</td>
+        </tr>
+        <tr>
+            <td>27</td>
+            <td>/messages/acc/:accId</td>
+            <td>GET</td>
+            <td>accId</td>
+            <td>Danh sách tin nhắn của người dùng</td>
+            <td>Lấy danh sách tin nhắn đã gửi bởi người dùng với ID tài khoản</td>
+        </tr>
+        <tr>
+            <td>28</td>
+            <td>/messages/chatroom/:chatRoomId</td>
+            <td>GET</td>
+            <td>chatRoomId</td>
+            <td>Danh sách tin nhắn trong phòng chat</td>
+            <td>Lấy danh sách tin nhắn theo ID phòng chat</td>
+        </tr>
+        <tr>
+            <td>29</td>
+            <td>/messages/:id</td>
+            <td>GET</td>
+            <td>id</td>
+            <td>Thông tin tin nhắn</td>
+            <td>Lấy thông tin tin nhắn theo ID</td>
+        </tr>
+        <tr>
+            <td>30</td>
+            <td>/messages</td>
+            <td>POST</td>
+            <td>chatRoomId, senderId, content, createdAt</td>
+            <td>Thông tin tin nhắn mới</td>
+            <td>Tạo tin nhắn mới</td>
+        </tr>
+        <tr>
+            <td>31</td>
+            <td>/messages/:id</td>
+            <td>PUT</td>
+            <td>chatRoomId, senderId, content, createdAt</td>
+            <td>Thông tin tin nhắn đã cập nhật</td>
+            <td>Cập nhật thông tin tin nhắn theo ID</td>
+        </tr>
+        <tr>
+            <td>32</td>
+            <td>/messages/:id</td>
+            <td>DELETE</td>
+            <td>id</td>
+            <td>Thông tin tin nhắn đã xóa</td>
+            <td>Xóa tin nhắn theo ID</td>
+        </tr>
+        <tr>
+            <td>33</td>
+            <td>/messages/createMultipleMessages</td>
+            <td>POST</td>
+            <td>messages (array)</td>
+            <td>Danh sách tin nhắn đã tạo</td>
+            <td>Tạo nhiều tin nhắn cùng lúc</td>
+        </tr>
+        <tr>
+            <td>34</td>
+            <td>/plan/:accId</td>
+            <td>GET</td>
+            <td>accId</td>
+            <td>Thông tin kế hoạch cho tài khoản</td>
+            <td>Lấy thông tin kế hoạch theo accId</td>
+        </tr>
+        <tr>
+            <td>35</td>
+            <td>/plan/:id</td>
+            <td>GET</td>
+            <td>id</td>
+            <td>Thông tin kế hoạch theo id</td>
+            <td>Lấy thông tin kế hoạch theo id</td>
+        </tr>
+        <tr>
+            <td>36</td>
+            <td>/plan</td>
+            <td>POST</td>
+            <td>accId, budget, paid, date, partner, vendors, location</td>
+            <td>Thông tin kế hoạch mới được tạo</td>
+            <td>Tạo mới kế hoạch</td>
+        </tr>
+        <tr>
+            <td>37</td>
+            <td>/plan/:id</td>
+            <td>PUT</td>
+            <td>id, accId, budget, paid, date, partner, vendors, location</td>
+            <td>Thông tin kế hoạch đã cập nhật</td>
+            <td>Cập nhật thông tin kế hoạch theo id</td>
+        </tr>
+        <tr>
+            <td>38</td>
+            <td>/plan/:id</td>
+            <td>DELETE</td>
+            <td>id</td>
+            <td>Thông báo kế hoạch đã bị xóa</td>
+            <td>Xóa kế hoạch theo id</td>
+        </tr>
+        <tr>
+            <td>39</td>
+            <td>/plan/:accId/toggle-vendor</td>
+            <td>POST</td>
+            <td>accId, vendorId, vendorType</td>
+            <td>Cập nhật thông tin kế hoạch với vendor đã thêm hoặc xóa</td>
+            <td>Thêm hoặc xóa vendor khỏi kế hoạch</td>
+        </tr>
+        <tr>
+            <td>40</td>
+            <td>/plan/:accId/check-vendor</td>
+            <td>POST</td>
+            <td>accId, vendorId</td>
+            <td>Thông tin trạng thái tồn tại của vendor trong kế hoạch</td>
+            <td>Kiểm tra vendor đã có trong kế hoạch hay chưa</td>
+        </tr>
+        <tr>
+            <td>41</td>
+            <td>/reviews/:accId</td>
+            <td>GET</td>
+            <td>accId</td>
+            <td>Danh sách các đánh giá của tài khoản</td>
+            <td>Lấy danh sách các đánh giá của tài khoản theo accId</td>
+        </tr>
+        <tr>
+            <td>42</td>
+            <td>/review/:id</td>
+            <td>GET</td>
+            <td>id</td>
+            <td>Thông tin chi tiết về một đánh giá</td>
+            <td>Lấy thông tin chi tiết của một đánh giá theo id</td>
+        </tr>
+        <tr>
+            <td>43</td>
+            <td>/review</td>
+            <td>POST</td>
+            <td>vendorItemId, accId, review, rate</td>
+            <td>Thông tin đánh giá mới, đánh giá vừa tạo</td>
+            <td>Tạo mới một đánh giá cho một sản phẩm từ tài khoản cụ thể</td>
+        </tr>
+        <tr>
+            <td>44</td>
+            <td>/review/:id</td>
+            <td>PUT</td>
+            <td>id, vendorItemId, accId, review, rate</td>
+            <td>Thông tin đánh giá đã được cập nhật</td>
+            <td>Cập nhật thông tin đánh giá theo id</td>
+        </tr>
+        <tr>
+            <td>45</td>
+            <td>/review/:id</td>
+            <td>DELETE</td>
+            <td>id</td>
+            <td>Thông báo xóa thành công và thông tin đánh giá đã xóa</td>
+            <td>Xóa đánh giá theo id</td>
+        </tr>
+        <tr>
+            <td>46</td>
+            <td>/vendorItems/:accId</td>
+            <td>GET</td>
+            <td>accId</td>
+            <td>Danh sách các VendorItems theo accId</td>
+            <td>Lấy danh sách các VendorItems của tài khoản với accId cho trước</td>
+        </tr>
+        <tr>
+            <td>47</td>
+            <td>/vendorItems/type/:type</td>
+            <td>GET</td>
+            <td>type</td>
+            <td>Danh sách các VendorItems theo loại (type)</td>
+            <td>Lấy danh sách các VendorItems có loại (type) cho trước</td>
+        </tr>
+        <tr>
+            <td>48</td>
+            <td>/vendorItems/:id</td>
+            <td>GET</td>
+            <td>id</td>
+            <td>Thông tin chi tiết của VendorItem theo id</td>
+            <td>Lấy thông tin chi tiết của một VendorItem theo id cho trước</td>
+        </tr>
+        <tr>
+            <td>49</td>
+            <td>/vendorItems</td>
+            <td>POST</td>
+            <td>accId, name, type, description, subInfo, priceFrom, priceTo</td>
+            <td>VendorItem mới</td>
+            <td>Tạo một VendorItem mới cho tài khoản với thông tin cung cấp</td>
+        </tr>
+        <tr>
+            <td>50</td>
+            <td>/vendorItems/bulk</td>
+            <td>POST</td>
+            <td>vendorItems (array)</td>
+            <td>Thông tin các VendorItems đã thêm</td>
+            <td>Thêm nhiều VendorItems cùng lúc</td>
+        </tr>
+        <tr>
+            <td>51</td>
+            <td>/vendorItems/:id</td>
+            <td>PUT</td>
+            <td>id, accId, name, type, description, subInfo, priceFrom, priceTo</td>
+            <td>Thông tin VendorItem đã được cập nhật</td>
+            <td>Cập nhật thông tin của VendorItem theo id cho trước</td>
+        </tr>
+        <tr>
+            <td>52</td>
+            <td>/vendorItems/:id</td>
+            <td>DELETE</td>
+            <td>id</td>
+            <td>Thông báo xóa thành công và thông tin VendorItem đã bị xóa</td>
+            <td>Xóa một VendorItem theo id cho trước</td>
+        </tr>
+        <tr>
+            <td>53</td>
+            <td>/vendorItems/type/:type</td>
+            <td>DELETE</td>
+            <td>type</td>
+            <td>Thông báo xóa thành công</td>
+            <td>Xóa tất cả các VendorItems theo loại (type) cho trước</td>
+        </tr>
+        <tr>
+            <td>54</td>
+            <td>/vendorItems/plan/:accId</td>
+            <td>GET</td>
+            <td>accId</td>
+            <td>Danh sách các VendorItems đã được nhóm theo type</td>
+            <td>Lấy thông tin các VendorItems liên kết với một Plan, nhóm theo loại</td>
+        </tr>
+        <tr>
+            <td>55</td>
+            <td>/vendorItems/updateAll</td>
+            <td>PUT</td>
+            <td>field, newValue</td>
+            <td>Thông báo cập nhật thành công và thông tin về các VendorItems đã được cập nhật</td>
+            <td>Cập nhật trường (field) cho tất cả các VendorItems với giá trị mới (newValue)</td>
+        </tr>
+                                       
+    
+
+
+
+    </table>
+</div>
+
+</body>
+</html>
