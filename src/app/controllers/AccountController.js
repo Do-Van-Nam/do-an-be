@@ -48,20 +48,20 @@ const createAcc = async (req, res) => {
 }
 const updateAcc = async (req, res) => {
     const id = req.params.id
-    let { name, phone, password, role } = req.body
+    let { name, phone, password, role,mail } = req.body
     try {
+const updatedAccount = {};
 
-        // ma hoa mat khau 
-        const salt = await bcrypt.genSalt(10)
-        const hashedPassword = await bcrypt.hash(password, salt)
+    if (name) updatedAccount.name = name;
+    if (phone) updatedAccount.phone = phone;
+    if (role) updatedAccount.role = role;
+    if (mail) updatedAccount.mail = mail;
 
-        const updatedAccount = {
-            name,
-            phone,
-            hashedPassword,
-            role
-        }
-
+    // Chỉ mã hoá nếu có mật khẩu mới
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      updatedAccount.password = await bcrypt.hash(password, salt);
+    }
         const updatedAcc = await Account.findByIdAndUpdate(id,updatedAccount,{new : true})
         if(!updatedAcc){
         return res.status(404).json({ message: 'Account not found' })
