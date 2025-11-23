@@ -15,6 +15,8 @@ const dbreview = require('../src/config/db/dbreview')
 const dbchatroom = require('../src/config/db/dbchatroom')
 const dbmessage = require('../src/config/db/dbmessage')
 const dbguest = require('../src/config/db/dbguest')
+const dbcart = require('../src/config/db/dbcart')
+const dborder = require('../src/config/db/dborder')
 
 //connect DB
 dbaccs.connect()
@@ -27,6 +29,8 @@ dbchatroom.connect()
 dbmessage.connect()
 dbguest.connect()
 dbfavourite.connect()
+dbcart.connect()
+dborder.connect()
 
 const app = express()
 const port = process.env.PORT
