@@ -7,11 +7,13 @@ const Order = new Schema({
         {
             itemId: {type: String},
             quantity: {type: Number, default: 1},
+            status: {type: String, default: 'pending'}, // pending, completed, cancelled, shipping  
+            price: {type: Number, default: 0},
         }
     ],  
-    status: {type: String, default: 'pending'}, // pending, completed, cancelled, shipping  
-    totalAmount: {type: Number, default: 0}, 
-    orderDate: {type: Date, default: Date.now},  
+    paymentStatus: {type: String, default: 'cash'},// cash, bank 
+    totalAmount: {type: Number, default: 0},
+    orderDate: {type: Date, default: Date.now},
 })
 
 module.exports = mongoose.model('Order' , Order)

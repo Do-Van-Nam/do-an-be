@@ -15,7 +15,20 @@ const getReviewsByAccId = async (req, res) => {
         return res.status(500).json({ message: 'Server error' });
     }
 };
-
+// Lấy danh sách Reviews theo accId
+const getReviewsByVendorItemId = async (req, res) => {
+    const { vendorItemId } = req.params;
+    try {
+        const reviews = await Review.find({ vendorItemId });
+        if (!reviews.length) {
+            return res.status(404).json({ message: 'No Reviews found for this account' });
+        }
+        res.json({ reviews });
+    } catch (error) {
+        console.error('Error fetching vendor items by accId:', error);
+        return res.status(500).json({ message: 'Server error' });
+    }
+};
 // Lấy thông tin Review theo id
 const getReviewById = async (req, res) => {
     const { id } = req.params;
@@ -35,7 +48,7 @@ const getReviewById = async (req, res) => {
 const createReview = async (req, res) => {
     const { vendorItemId, accId, review, rate } = req.body;
     try {
-        const existingReview = await Review.findOne({ vendorItemId,accId });
+        const existingReview = await Review.findOne({ vendorItemId,accId,rate });
         if (existingReview) {
             return res.status(400).json({ message: 'Review already exists!' });
         }
@@ -93,27 +106,34 @@ const deleteReview = async (req, res) => {
         return res.status(500).json({ message: 'Server error' });
     }
 };
-const updateItemReviewStats = async (vendorItemId)=>{
-    const stats = await Review.aggregate([
-        {$match: {vendorItemId}},
-        {
-            $group:{
-                _id:"$vendorItemId",
-                avgRating: {$avg: 'rate'},
-                noReview: {$sum: 1}
-            }
-        }
-    ])
-    const {avgRating=0,noReview=0} = stats[0] || {}
-    await VendorItem.findByIdAndUpdate(vendorItemId,{
-        rating:avgRating,
-        noReview
-    })
+const updateItemReviewStats = async (vendorItemId) => {
+    try {
+        const stats = await Review.aggregate([
+            { $match: { vendorItemId } },
+            {
+                $group: {
+                    _id: "$vendorItemId",
+                    avgRating: { $avg: "$rate" },
+                    noReview: { $sum: 1 },
+                },
+            },
+        ])
+
+        const { avgRating = 0, noReview = 0 } = stats[0] || {}
+
+        await VendorItem.findByIdAndUpdate(vendorItemId, {
+            rate: avgRating,
+            noReview,
+        })
+    } catch (error) {
+        console.error("Error updating review stats:", error)
+    }
 }
 module.exports = {
     getReviewsByAccId,
     getReviewById,
     createReview,
     updateReview,
-    deleteReview
+    deleteReview,
+    getReviewsByVendorItemId
 };
