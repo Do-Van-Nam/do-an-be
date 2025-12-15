@@ -12,6 +12,7 @@ const VendorItem = new Schema({
     typeVendor : {type:String,default:"sell"},  // sell, rent , both
     priceSell: {type:Number,default:0},
     priceRent: {type:Number,default:0},
+    periodRent: {type:String, default:"day"} // day, week, month
     // address: {type:String},
     // subInfo : { type : String, },
     // priceFrom : {type: Number},

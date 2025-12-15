@@ -46,14 +46,14 @@ const getReviewById = async (req, res) => {
 
 // Tạo mới Review
 const createReview = async (req, res) => {
-    const { vendorItemId, accId, review, rate } = req.body;
+    const { vendorItemId, accId, review, rate ,name} = req.body;
     try {
-        const existingReview = await Review.findOne({ vendorItemId,accId,rate });
+        const existingReview = await Review.findOne({ vendorItemId,accId });
         if (existingReview) {
             return res.status(400).json({ message: 'Review already exists!' });
         }
 
-        const newReview = new Review({ vendorItemId, accId, review, rate });
+        const newReview = new Review({ vendorItemId, accId, review, rate,name });
 
         await newReview.save();
         updateItemReviewStats(vendorItemId)
@@ -67,14 +67,14 @@ const createReview = async (req, res) => {
 // Cập nhật thông tin Review theo id
 const updateReview = async (req, res) => {
     const { id } = req.params;
-    const { vendorItemId, accId, review,
+    const { vendorItemId, accId, review,name,
         rate } = req.body;
     try {
         const updatedReview = await Review.findByIdAndUpdate(
             id,
             {
                 vendorItemId, accId, review,
-                rate
+                rate,name
             },
             { new: true }
         );
