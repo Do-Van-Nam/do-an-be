@@ -14,6 +14,9 @@ const Order = new Schema({
     paymentStatus: {type: String, default: 'cash'},// cash, bank 
     totalAmount: {type: Number, default: 0},
     orderDate: {type: Date, default: Date.now},
+    startDate: {type: Date, default: Date.now},
+    endDate: {type: Date, default: Date.now},
+    typeOrder: {type: String, default: "buy"},  // buy , rent
 })
 
 module.exports = mongoose.model('Order' , Order)

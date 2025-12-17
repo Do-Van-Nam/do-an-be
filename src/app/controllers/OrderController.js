@@ -1,5 +1,12 @@
 const Order = require('../models/Order')
 
+// Helper function to calculate totalAmount from items
+const calculateTotalAmount = (items) => {
+    return items.reduce((total, item) => {
+        return total + (item.quantity * item.price)
+    }, 0)
+}
+
 // LẤY ORDER THEO accId
 const getOrderByAccId = async (req, res) => {
     try {
@@ -21,7 +28,17 @@ const getOrderByAccId = async (req, res) => {
 // THÊM SẢN PHẨM VÀO ORDER (nếu chưa có thì tạo mới)
 const addToOrder = async (req, res) => {
     try {
-        const { accId, itemId, quantity = 1, price = 0 } = req.body
+        const { 
+            accId, 
+            itemId, 
+            quantity = 1, 
+            price = 0, 
+            status = 'pending',
+            paymentStatus,
+            typeOrder,
+            startDate,
+            endDate
+        } = req.body
 
         if (!accId || !itemId) {
             return res.status(400).json({ message: 'Missing accId or itemId' })
@@ -30,9 +47,15 @@ const addToOrder = async (req, res) => {
         let order = await Order.findOne({ accId })
 
         if (!order) {
+            const newItems = [{ itemId, quantity, price, status }]
             order = new Order({
                 accId,
-                items: [{ itemId, quantity, price }]
+                items: newItems,
+                paymentStatus: paymentStatus || 'cash',
+                totalAmount: calculateTotalAmount(newItems),
+                typeOrder: typeOrder || 'buy',
+                startDate: startDate ? new Date(startDate) : new Date(),
+                endDate: endDate ? new Date(endDate) : new Date(),
             })
             await order.save()
             return res.status(201).json({ message: 'Order created and item added', order })
@@ -43,9 +66,22 @@ const addToOrder = async (req, res) => {
         if (existingItem) {
             existingItem.quantity += quantity
             existingItem.price = price || existingItem.price
+            // Only update status if provided
+            if (status && status !== 'pending') {
+                existingItem.status = status
+            }
         } else {
-            order.items.push({ itemId, quantity, price })
+            order.items.push({ itemId, quantity, price, status })
         }
+
+        // Update totalAmount
+        order.totalAmount = calculateTotalAmount(order.items)
+        
+        // Update optional fields if provided
+        if (paymentStatus) order.paymentStatus = paymentStatus
+        if (typeOrder) order.typeOrder = typeOrder
+        if (startDate) order.startDate = new Date(startDate)
+        if (endDate) order.endDate = new Date(endDate)
 
         await order.save()
         return res.status(200).json({ message: 'Item added to order', order })
@@ -59,7 +95,14 @@ const addToOrder = async (req, res) => {
 // THÊM NHIỀU SẢN PHẨM VÀO ORDER (nhận mảng items trong body)
 const addManyToOrder = async (req, res) => {
     try {
-        const { accId, items = [] } = req.body
+        const { 
+            accId, 
+            items = [],
+            paymentStatus,
+            typeOrder,
+            startDate,
+            endDate
+        } = req.body
 
         if (!accId || !Array.isArray(items) || items.length === 0) {
             return res.status(400).json({ message: 'Missing accId or items' })
@@ -68,29 +111,49 @@ const addManyToOrder = async (req, res) => {
         let order = await Order.findOne({ accId })
 
         if (!order) {
+            const newItems = items.map(({ itemId, quantity = 1, price = 0, status = 'pending' }) => ({
+                itemId,
+                quantity,
+                price,
+                status,
+            }))
             order = new Order({
                 accId,
-                items: items.map(({ itemId, quantity = 1, price = 0 }) => ({
-                    itemId,
-                    quantity,
-                    price,
-                })),
+                items: newItems,
+                paymentStatus: paymentStatus || 'cash',
+                totalAmount: calculateTotalAmount(newItems),
+                typeOrder: typeOrder || 'buy',
+                startDate: startDate ? new Date(startDate) : new Date(),
+                endDate: endDate ? new Date(endDate) : new Date(),
             })
             await order.save()
             return res.status(201).json({ message: 'Order created and items added', order })
         }
 
         // Gộp theo itemId
-        items.forEach(({ itemId, quantity = 1, price = 0 }) => {
+        items.forEach(({ itemId, quantity = 1, price = 0, status = 'pending' }) => {
             if (!itemId) return
             const existingItem = order.items.find(item => item.itemId === itemId)
             if (existingItem) {
                 existingItem.quantity += quantity
                 existingItem.price = price || existingItem.price
+                // Only update status if provided and not default
+                if (status && status !== 'pending') {
+                    existingItem.status = status
+                }
             } else {
-                order.items.push({ itemId, quantity, price })
+                order.items.push({ itemId, quantity, price, status })
             }
         })
+
+        // Update totalAmount
+        order.totalAmount = calculateTotalAmount(order.items)
+        
+        // Update optional fields if provided
+        if (paymentStatus) order.paymentStatus = paymentStatus
+        if (typeOrder) order.typeOrder = typeOrder
+        if (startDate) order.startDate = new Date(startDate)
+        if (endDate) order.endDate = new Date(endDate)
 
         await order.save()
         return res.status(200).json({ message: 'Items added to order', order })
