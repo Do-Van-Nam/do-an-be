@@ -1,21 +1,150 @@
 const axios = require('axios');
+const VendorItem = require('../models/VendorItem'); // Điều chỉnh path cho đúng
+
+// Danh sách thứ tự ưu tiên types (extract từ object type)
+const orderedTypes = [
+  "venue", "bridal-gown", "catering", "flowers", "makeup-services", "a-line-dress", "photographer",
+  "wedding-planner", "wedding-cake", "dj", "videographer", "rental-bridal", "band", "bar-service",
+  "transportation", "invitations", "ball-gown", "mermaid-dress", "bodycon-dress", "short-dress",
+  "suit-and-tuxedo", "bridesmaid-dress", "wedding-ring", "princess-cut-ring", "asscher-cut-ring",
+  "cushion-cut-ring", "emerald-cut-ring", "pear-cut-ring", "radiant-cut-ring", "round-cut-ring",
+  "oval-cut-ring"
+];
 
 const getNlpData = async (req, res) => {
     try {
-        const { userPrompt } = req.params
+        const { userPrompt } = req.body;
 
-        const response = await axios.post('http://localhost:8000/parse', {
+        if (!userPrompt || userPrompt.trim() === '') {
+            return res.status(400).json({ message: 'userPrompt là bắt buộc' });
+        }
+
+        // Gọi service Python để parse prompt
+        const parseResponse = await axios.post('https://nlp-api-service2.onrender.com/parse', {
             prompt: userPrompt
         });
-        return res.status(200).json( {response} )
-        console.log("Dữ liệu nhận được:", response.data);
-    } catch (error) {
-        console.error("Lỗi kết nối Python:", error.message);
-        return res.status(500).json({ message: 'Server error' })
-    }
-}
 
-//getNlpData("Tôi muốn đám cưới 200 triệu phong cách hiện đại");
-module.exports = {
-getNlpData
+        const parsedData = parseResponse.data;
+
+        // Kiểm tra cấu trúc response từ Python
+        if (!parsedData || typeof parsedData !== 'object') {
+            return res.status(500).json({ message: 'Dữ liệu từ service parse không hợp lệ' });
+        }
+
+        const { budget = 0, style = [], items: requiredItems = [] } = parsedData;
+
+        // Chuẩn hóa style và requiredItems (lowercase để match case-insensitive)
+        const normalizedStyles = style.map(s => s.trim().toLowerCase());
+        const normalizedRequired = requiredItems.map(item => item.trim().toLowerCase());
+
+        // Query tất cả vendorItems phù hợp với style (tags chứa ít nhất 1 style)
+        let baseQuery = {};
+        if (normalizedStyles.length > 0) {
+            baseQuery.tags = { $in: normalizedStyles.map(s => new RegExp(s, 'i')) };
+        }
+
+        const allVendorItems = await VendorItem.find(baseQuery)
+            .select({
+                accId: 1, name: 1, type: 1, description: 1, rate: 1, noReview: 1, imgLink: 1,
+                typeVendor: 1, priceSell: 1, priceRent: 1, periodRent: 1, tags: 1
+            })
+            .sort({ rate: -1, noReview: -1, priceSell: 1, priceRent: 1 }) // Ưu tiên rate cao, review nhiều, giá rẻ
+            .lean();
+
+        if (allVendorItems.length === 0) {
+            return res.status(200).json({
+                message: 'Không tìm thấy dịch vụ phù hợp với style',
+                parsed: parsedData,
+                required: [],
+                suggested: [],
+                totalCost: 0,
+                remainingBudget: budget
+            });
+        }
+
+        // Hàm lấy giá của item (ưu tiên priceSell nếu có, else priceRent)
+        const getItemPrice = (item) => {
+            if (item.typeVendor === 'sell' || item.typeVendor === 'both') {
+                return item.priceSell > 0 ? item.priceSell : item.priceRent;
+            }
+            return item.priceRent > 0 ? item.priceRent : 0;
+        };
+
+        // Group allVendorItems by type (lowercase type để match)
+        const itemsByType = {};
+        allVendorItems.forEach(item => {
+            const itemType = item.type ? item.type.trim().toLowerCase() : null;
+            if (itemType) {
+                if (!itemsByType[itemType]) {
+                    itemsByType[itemType] = [];
+                }
+                itemsByType[itemType].push({ ...item, price: getItemPrice(item) });
+            }
+        });
+
+        // Xác định required types: Các type match với requiredItems (qua type hoặc tags)
+        const requiredTypes = new Set();
+        const requiredSelected = [];
+        let totalCost = 0;
+
+        normalizedRequired.forEach(reqItem => {
+            for (const [typeKey, itemList] of Object.entries(itemsByType)) {
+                if (typeKey.includes(reqItem) || itemList.some(item => item.tags.some(tag => tag.toLowerCase().includes(reqItem)))) {
+                    if (!requiredTypes.has(typeKey)) {
+                        // Chọn 1 item tốt nhất (đầu tiên sau sort)
+                        const bestItem = itemList[0];
+                        if (bestItem && bestItem.price <= budget - totalCost) {
+                            requiredSelected.push(bestItem);
+                            totalCost += bestItem.price;
+                            requiredTypes.add(typeKey);
+                        }
+                    }
+                }
+            }
+        });
+
+        // Budget còn lại
+        let remainingBudget = budget - totalCost;
+
+        // Gợi ý thêm theo thứ tự orderedTypes, skip requiredTypes, mỗi type chọn 1 item nếu đủ budget
+        const suggested = [];
+        orderedTypes.forEach(type => {
+            const normalizedType = type.toLowerCase();
+            if (!requiredTypes.has(normalizedType) && itemsByType[normalizedType]) {
+                // Chọn item tốt nhất (đầu tiên sau sort)
+                const bestItem = itemsByType[normalizedType][0];
+                if (bestItem && bestItem.price <= remainingBudget) {
+                    suggested.push(bestItem);
+                    totalCost += bestItem.price;
+                    remainingBudget -= bestItem.price;
+                    requiredTypes.add(normalizedType); // Để tránh duplicate
+                }
+            }
+        });
+
+        // Trả về kết quả
+        return res.status(200).json({
+            parsed: parsedData,
+            required: requiredSelected,
+            suggested: suggested,
+            totalCost: totalCost,
+            remainingBudget: remainingBudget
+        });
+
+    } catch (error) {
+        console.error("Lỗi trong getNlpData:", error.message);
+
+        // Phân loại lỗi
+        if (error.code === 'ECONNREFUSED') {
+            return res.status(502).json({ message: 'Không thể kết nối đến service phân tích ngôn ngữ (Python)' });
+        }
+
+        if (error.response) {
+            return res.status(502).json({ message: 'Lỗi từ service NLP', details: error.response.data || error.message });
+        }
+
+        return res.status(500).json({ message: 'Lỗi server nội bộ', error: error.message });
+    }
 };
+
+module.exports = { getNlpData };
